@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>WebSocket Button Test</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding-top: 50px;
+      background: #121212;
+      color: #fff;
+      position: relative;
+    }
+
+    .status-indicator {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background-color: red; /* default to disconnected */
+      border: 2px solid #444;
+    }
+
+    .connected {
+      background-color: green;
+    }
+
+    button {
+      margin: 10px;
+      padding: 12px 24px;
+      font-size: 18px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      display: none; /* hide initially */
+    }
+
+    #helloBtn { background-color: #4caf50; color: white; }
+    #goodbyeBtn { background-color: #f44336; color: white; }
+    #showBtn { background-color: #2196f3; color: white; }
+    #hideBtn { background-color: #9c27b0; color: white; }
+
+    #status {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="status-indicator" id="connectionIndicator"></div>
+
+  <h1>WebSocket Tester</h1>
+
+  <button id="helloBtn">Send Hello</button>
+  <button id="goodbyeBtn">Send Goodbye</button>
+  <button id="showBtn">Send Show</button>
+  <button id="hideBtn">Send Hide</button>
+
+  <div id="status">Connecting to WebSocket...</div>
+
+  <script>
+    const status = document.getElementById('status');
+    const indicator = document.getElementById('connectionIndicator');
+
+    const buttons = {
+      hello: document.getElementById('helloBtn'),
+      goodbye: document.getElementById('goodbyeBtn'),
+      show: document.getElementById('showBtn'),
+      hide: document.getElementById('hideBtn')
+    };
+
+    const ws = new WebSocket("ws://localhost:8080/ws/");
+
+    const updateUIForConnection = (connected) => {
+      Object.values(buttons).forEach(btn => {
+        btn.style.display = connected ? "inline-block" : "none";
+      });
+      indicator.classList.toggle('connected', connected);
+    };
+
+    ws.onopen = () => {
+      status.textContent = "Connected to WebSocket server.";
+      updateUIForConnection(true);
+    };
+
+    ws.onmessage = (event) => {
+      console.log("Received from server:", event.data);
+      status.textContent = "Server: " + event.data;
+    };
+
+    ws.onclose = () => {
+      status.textContent = "WebSocket connection closed.";
+      updateUIForConnection(false);
+    };
+
+    ws.onerror = (err) => {
+      console.error("WebSocket error:", err);
+      status.textContent = "WebSocket error. Check console.";
+      updateUIForConnection(false);
+    };
+
+    buttons.hello.onclick = () => ws.readyState === WebSocket.OPEN && ws.send("Hello");
+    buttons.goodbye.onclick = () => ws.readyState === WebSocket.OPEN && ws.send("Goodbye");
+    buttons.show.onclick = () => ws.readyState === WebSocket.OPEN && ws.send("show");
+    buttons.hide.onclick = () => ws.readyState === WebSocket.OPEN && ws.send("hide");
+  </script>
+</body>
+</html>
